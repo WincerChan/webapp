@@ -3,6 +3,7 @@ import os
 
 from flask import Flask, redirect, render_template, session, url_for
 from flask_bootstrap import Bootstrap
+from flask_mail import Mail, Message
 from flask_migrate import Migrate, MigrateCommand
 from flask_moment import Moment
 from flask_script import Manager, Shell
@@ -19,13 +20,23 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///' + os.path.join(basedir, 'data.sqlite')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+print(os.environ.get('MAIL_USERNAME'))
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+print(os.environ.get('MAIL_PASSWORD'))
+app.config['Blog_MAIL_SUBJECT_PREFIX'] = '[Blog]'
+app.config['Blog_MAIL_SENDER'] = 'Blog Admin <WincerChan@gmail.com>'
+app.config['Blog_ADMIN'] = os.environ.get('Blog_ADMIN')
 
 db = SQLAlchemy(app)
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 migrate = Migrate(app, db)
-manager.add_command('db', MigrateCommand)
+mail = Mail(app)
 
 
 class Role(db.Model):
@@ -61,9 +72,18 @@ def index():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.name.data).first()
         if user is None:
+            print('user is none')
             user = User(username=form.name.data)
             db.session.add(user)
             session['known'] = False
+            print(app.config['Blog_ADMIN'])
+            if app.config['Blog_ADMIN']:
+                print('send_emai!')
+                send_email(
+                    app.config['Blog_ADMIN'],
+                    'New User',
+                    'mail/new_user',
+                    user=user)
         else:
             session['known'] = True
         session['name'] = form.name.data
@@ -95,7 +115,19 @@ def make_shell_context():
     return dict(app=app, db=db, User=User, Role=Role)
 
 
+manager.add_command('db', MigrateCommand)
 manager.add_command("shell", Shell(make_context=make_shell_context))
+
+
+def send_email(to, subject, template, **kwargs):
+    msg = Message(
+        app.config['Blog_MAIL_SUBJECT_PREFIX'] + ' ' + subject,
+        sender=app.config['Blog_MAIL_SENDER'],
+        recipients=[to])
+    msg.body = render_template(template + '.txt', **kwargs)
+    msg.html = render_template(template + '.html', **kwargs)
+    mail.send(msg)
+
 
 if __name__ == '__main__':
     manager.run()
