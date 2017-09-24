@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "_macros.html" as macros %}
-{% block title %} Blog - {{ user.username }}{% endblock %}
+{% block title %} Bloggg - {{ user.username }}{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
@@ -21,7 +21,7 @@
         {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
         <p>Member since {{ moment(user.member_since).format('L') }}. Last seen {{ moment(user.last_seen).fromNow() }}.</p>
         <p>
-            {{ user.posts.count()}} blog posts.
+            {{ user.posts.count()}} bloggg posts.
         </p>
         <p>
             {% if current_user.can(Permission.FOLLOW) and user != current_user %}
