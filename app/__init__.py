@@ -5,6 +5,7 @@ from flask_mail import Mail
 from flask_moment import Moment
 from flask_pagedown import PageDown
 from flask_sqlalchemy import SQLAlchemy
+from flask_sslify import SSLify
 
 from config import config
 
@@ -34,8 +35,7 @@ def create_app(config_name):
     # if not app.debug and not app.testing and not app.config['SSL_DISABLE']:
     print('debug{}test{}'.format(app.debug, app.testing))
     if not app.debug and not app.testing:
-        from flask_sslify import SSLify
-        sslify = SSLify(app)
+        sslify = SSLify(app, age=300, subdomains=True)
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
