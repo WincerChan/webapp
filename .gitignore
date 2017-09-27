@@ -104,4 +104,5 @@ hello.py
 2data-dev.sqlite
 data-test.sqlite
 migrations2/
+tmp/
 .env
